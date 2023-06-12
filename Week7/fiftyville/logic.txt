@@ -1,0 +1,242 @@
+The THIEF is:
+The city the thief ESCAPED TO:
+The ACCOMPLICE is:
+
+--Part 1
+--select from crime_scene_reports, find out the detail of crime happened
+select id, description
+from crime_scene_reports
+where street = 'Humphrey Street' and year = 2021 and month = 7 and day = 28;
+
+--The crime took place in a bakery at 10:15am reported by 3 witness in an interview
+
+--Search interview table to find out the 3 witness's interview
+select id, year, month, day, transcript
+from interviews
+where transcript like "%bakery%" and year = 2021 and month = 7 and day = 28;
+
+--The interview reveal that
+--security footage 10 minute after the theft from bakery parking lot can show the car
+--the theif has withdraw money from atm on leggett street before the theft
+-- The thief make a phone call with duration less than 60 second right after he left the sene. He take the earliest flight out of fiftyville on 2021 7 29. The accompliace of the thief purchase the ticket.
+
+--Part 2
+--check security footage
+select id, year, month, day, hour, minute, license_plate, activity
+from bakery_security_logs
+where year = 2021 and month = 7 and day = 28 and hour = 10 and minute > 15 and minute < 25;
+--Result = potential license_plate of suspect's car
+
+--Get the personal data of the potential suspect with the license plate
+select id, name, passport_number, license_plate from people
+where license_plate in
+(select license_plate
+from bakery_security_logs
+where year = 2021 and month = 7 and day = 28 and hour = 10 and minute > 15 and minute < 25);
+--Result = potential suspect in regards to securyti footage
+
+--check phone call time & flight record
+select id, year, month, day, caller, receiver
+from phone_calls where year = 2021 and month = 7 and day = 28 and duration < 60;
+--result = potential phone number of suspect & accompliance
+
+--Get the personal data of the potential suspect with the phone number
+select id, name, passport_number, phone_number, license_plate from people
+where phone_number in
+(select caller
+from phone_calls where year = 2021 and month = 7 and day = 28 and duration < 60);
+
+--if we combine both result in part 2, the potential supsects are the one that match both condition
+-- need to join phone call, people and license to get the result
+select name from people
+where phone_number in
+(select caller
+from phone_calls where year = 2021 and month = 7 and day = 28 and duration < 60)
+and
+name in
+(select name from people where license_plate in
+(select license_plate
+from bakery_security_logs
+where year = 2021 and month = 7 and day = 28 and hour = 10 and minute > 15 and minute < 25));
+
+--End of part 2, the suspects are
+| Sofia  |
+| Diana  |
+| Kelsey |
+| Bruce  |
+
+--Part 3, ATM record
+--check atm record
+select account_number, year, month, day, atm_location
+from atm_transactions
+where year = 2021 and month = 7 and day = 28 and atm_location like "leggett street";
+--Result = potential id of transaction record of suspect
+
+--use account number and search in table "bank_account" for "person_id"
+select person_id from bank_accounts
+where account_number in
+(select account_number from atm_transactions
+where year = 2021 and month = 7 and day = 28 and atm_location like "leggett street");
+
+--search in "people" for "person id"
+select name from people
+join bank_accounts on bank_accounts.person_id = people.id
+where people.id in
+(select person_id from bank_accounts
+where account_number in
+(select account_number from atm_transactions
+where year = 2021 and month = 7 and day = 28 and atm_location like "leggett street"));
+
++---------+
+|  name   |
++---------+
+| Bruce   |
+| Kaelyn  |
+| Diana   |
+| Brooke  |
+| Kenny   |
+| Iman    |
+| Luca    |
+| Taylor  |
+| Benista |
+
+-- Result that overlapp with part 2 = Bruce & Diana
+
+--Part 4 Flight record
+-- check for people that take the earliest flight out of fiftyville on 29/7/2021
+select id from flights
+where origin_airport_id in
+(select id from airports
+where city = 'Fiftyville')
+and
+id in
+(select id from flights
+where year = 2021 and month = 7 and day = 29);
+--Result = all flight id that leave at 29/7/2021
+
+--check for the earliest flight
+select min(hour) from flights
+where id in
+(select id from flights
+where origin_airport_id in
+(select id from airports
+where city = 'Fiftyville')
+and
+id in
+(select id from flights
+where year = 2021 and month = 7 and day = 29));
+--Result - earliest flights is at hour '8'
+--------------------------------------------------------------
+--Side track, check for the destination of the flight
+select city from airports where
+id in
+(select destination_airport_id from flights
+where id in
+(select id from flights
+where origin_airport_id in
+(select id from airports
+where city = 'Fiftyville')
+and
+id in
+(select id from flights
+where year = 2021 and month = 7 and day = 29 and hour = 8)));
+--Result - New York City
+--------------------------------------------------------
+--check for all the passport number of the flight
+select passport_number from passengers
+join flights on flights.id = passengers.flight_id
+where flights.id in
+(select id from flights
+where origin_airport_id in
+(select id from airports
+where city = 'Fiftyville')
+and
+id in
+(select id from flights
+where year = 2021 and month = 7 and day = 29 and hour = 8));
+
+-- check for the name of hte passenger
+select name from people
+where passport_number in
+(select passport_number from passengers
+join flights on flights.id = passengers.flight_id
+where flights.id in
+(select id from flights
+where origin_airport_id in
+(select id from airports
+where city = 'Fiftyville')
+and
+id in
+(select id from flights
+where year = 2021 and month = 7 and day = 29 and hour = 8)));
+--result = all the name of people on a plane
+
++--------+
+|  name  |
++--------+
+| Kenny  |
+| Sofia  |
+| Taylor |
+| Luca   |
+| Kelsey |
+| Edward |
+| Bruce  |
+| Doris  |
++--------+
+
+-- suspect
+--combine result in part 2, 3, 4
+Thief = Bruce
+
+select name from people
+where phone_number in
+(select caller
+from phone_calls where year = 2021 and month = 7 and day = 28 and duration < 60)
+and
+name in
+(select name from people where license_plate in
+(select license_plate
+from bakery_security_logs
+where year = 2021 and month = 7 and day = 28 and hour = 10 and minute > 15 and minute < 25))
+and
+name in
+(select name from people
+join bank_accounts on bank_accounts.person_id = people.id
+where people.id in
+(select person_id from bank_accounts
+where account_number in
+(select account_number from atm_transactions
+where year = 2021 and month = 7 and day = 28 and atm_location like "leggett street")))
+and
+name in
+(select name from people
+where passport_number in
+(select passport_number from passengers
+join flights on flights.id = passengers.flight_id
+where flights.id in
+(select id from flights
+where origin_airport_id in
+(select id from airports
+where city = 'Fiftyville')
+and
+id in
+(select id from flights
+where year = 2021 and month = 7 and day = 29 and hour = 8))))
+;
+
++-------+
+| name  |
++-------+
+| Bruce |
+
+
+--Part 5 accompliance
+-- The receiver of the phone call is the accompliance
+select name from people where
+phone_number =
+(select receiver from phone_calls
+where caller =
+(select phone_number from people
+where name = 'Bruce')
+and year = 2021 and month = 7 and day = 28 and duration < 60);
+--Result: the accompliance is robin
