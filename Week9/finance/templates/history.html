@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    history
+{% endblock %}
+
+{% block main %}
+<div>
+    <b>Transaction History</b>
+</div>
+<div>
+    <h2>Stock transaction record</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Stock name</th>
+                <th>Shares</th>
+                <th>Buy-in total price</th>
+                <th>Sell-out total price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in historylist %}
+                <tr>
+                    <td>{{row["Stock"]}}</td>
+                    <td>{{row["Quantity"]}}</td>
+                    <td>{{row["total_Bought"]}}</td>
+                    <td>{{row["total_Sold"]}}</td>
+            {% endfor %}
+                </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

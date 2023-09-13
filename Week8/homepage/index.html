@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+        <link href="styles.css" rel="stylesheet">
+        <title>My Webpage</title>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                let page1 = document.querySelector('.page1');
+                page1.addEventListener('click', function() {
+                    console.log("click page 1 runs");
+                    alert("You are now going to page 1");
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <h1 id= Header>homepage</h1>
+        <ol>
+        <li class = "page1"><a href="Page1.html">Click here to go to first page</a></li>
+        <li><a href="Page2.html">Click here to go to second page</a></li>
+        <li><a href="Page3.html">Click here to go to third page</a></li>
+        </ol>
+        <div>
+            <ul>
+                <li>This is a <b>paragraph</b></li>
+                <li>This is a <i>div</i></li>
+                <li>This is a span</li>
+            </ul>
+        </div>
+        <div>
+            <table>
+                <tr class ="headerCell">
+                    <th></th>
+                    <th>Header1</th>
+                    <th>Header2</th>
+                    <th>Header3</th>
+                </tr>
+                <tr>
+                    <th>Row Header1</th>
+                    <td class = "redUnderline">data</td>
+                    <td>data</td>
+                    <td>data</td>
+                </tr>
+                <tr>
+                    <th>Row Header2</th>
+                    <td>data</td>
+                    <td>data</td>
+                    <td>data</td>
+                </tr>
+            </table>
+        </div>
+    </body>
+</html>

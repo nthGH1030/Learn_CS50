@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    index
+{% endblock %}
+
+{% block main %}
+<div>
+    <b>You have HK${{balance}} balacne remaining</b>
+</div>
+<div>
+    <h2>Stock Profile</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Stock name</th>
+                <th>Shares</th>
+                <th>Average Buy-in price</th>
+                <th>Market price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in userProfile %}
+                <tr>
+                    <td>{{row["Stock"]}}</td>
+                    <td>{{row["Quantity"]}}</td>
+                    <td>{{row["Price"]}}</td>
+                    {% for k,v in stockprice.items() %}
+                        {% if k == row["Stock"] %}
+                        <td>{{v}}</td>
+                        {% endif %}
+                    {% endfor %}
+            {% endfor %}
+                </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

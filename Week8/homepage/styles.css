@@ -1,0 +1,31 @@
+table, th,td{
+    border: 1px solid;
+    text-align:center;
+}
+
+.redUnderline{
+    text-decoration-line:underline;
+    text-decoration-color: red;
+}
+
+.headerCell{
+    text-transform: uppercase;
+    background-color: #D3C7C4
+}
+
+body {
+    background-color: lightblue;
+  }
+
+#Header{
+    text-transform: uppercase;
+    background-color: #CCD8D8
+}
+
+[class*="line"]{
+    background-color: #BB9D85
+}
+
+[href*="Page"]{
+    color : red;
+}
