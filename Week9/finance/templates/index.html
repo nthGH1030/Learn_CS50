@@ -6,33 +6,34 @@
 
 {% block main %}
 <div>
-    <b>You have HK${{balance}} balacne remaining</b>
+    <b>You have USD$ {{balance}} balacne remaining</b>
 </div>
 <div>
     <h2>Stock Profile</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Stock name</th>
-                <th>Shares</th>
-                <th>Average Buy-in price</th>
-                <th>Market price</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in userProfile %}
+    {% if outputlist == None %}
+        <b>You do not make any transaction !</b>
+    {% else %}
+        <table>
+            <thead>
                 <tr>
-                    <td>{{row["Stock"]}}</td>
-                    <td>{{row["Quantity"]}}</td>
-                    <td>{{row["Price"]}}</td>
-                    {% for k,v in stockprice.items() %}
-                        {% if k == row["Stock"] %}
-                        <td>{{v}}</td>
-                        {% endif %}
-                    {% endfor %}
-            {% endfor %}
+                    <th>Stock name</th>
+                    <th>Shares</th>
+                    <th>Average Buy-in price</th>
+                    <th>Market price</th>
                 </tr>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for row in outputlist %}
+                    <tr>
+                        <td>{{row["Stock"]}}</td>
+                        <td>{{row["Quantity"]}}</td>
+                        <td>{{row["Price"]}}</td>
+                        <td>{{row["Market_Price"]}}</td>
+
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 </div>
 {% endblock %}

@@ -38,17 +38,38 @@ def index():
     """Show portfolio of stocks"""
     userProfile = db.execute("select Stock,Quantity,Price from stockprofile where user_id = ?", session["user_id"])
     stocksymbol = db.execute("select Stock from stockprofile where user_id = ?", session["user_id"])
-    #print(stocksymbol)
+    balance = usd(db.execute("select cash from users where id = ?", session["user_id"])[0].get("cash"))
+
+    outputlist = []
+    print("length of userProfile: ", len(userProfile))
+    print(stocksymbol)
     #Use lookup to find the current price of the stock
     #print(lookup("NFLX"))
-    for stock in stocksymbol:
-        stockprice = {lookup(stock.get("Stock"))["name"]: lookup(stock.get("Stock"))["price"]}
-        print(stockprice)
-    #the total value of stock
-    #current cash balance
-    balance = db.execute("select cash from users where id = ?", session["user_id"])[0].get("cash")
+    marketprice = []
+    if len(userProfile) > 0:
+        for profile in userProfile:
 
-    return render_template("index.html", userProfile = userProfile, stockprice = stockprice, balance = balance)
+            marketprice = lookup(profile["Stock"])
+
+            output = {
+                "Stock": profile["Stock"],
+                "Quantity": profile["Quantity"],
+                "Price": usd(profile["Price"]),
+                "Market_Price": usd(marketprice["price"])
+            }
+
+            # print(k,v)
+            print("output: ", output)
+            outputlist.append(output)
+            print("outputlist: ", outputlist)
+
+
+        return render_template("index.html", outputlist = outputlist, balance = balance)
+    else:
+
+        outputlist = None
+
+        return render_template("index.html", outputlist = outputlist, balance = balance)
 
 
 @app.route("/buy", methods=["GET", "POST"])
@@ -60,58 +81,68 @@ def buy():
 
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-        stocksymbol = request.form.get("symbol")
-        sharequantity = request.form.get("shares")
-        print(stocksymbol)
-        print(sharequantity)
-        #check for invalid input from user
-        if sharequantity.isnumeric() is False or int(sharequantity) <= 0:
-            return apology("You must enter a positive number")
+        try:
+            #get user input
+            stocksymbol = request.form.get("symbol")
+            sharequantity = request.form.get("shares")
+            print(stocksymbol)
+            print(sharequantity)
+            #check totalstock price
+            stockprice = lookup(stocksymbol)["price"]
+            print("Market price is: ", stockprice)
 
-        #check totalstock price
-        stockprice = lookup(stocksymbol)["price"]
-        print(stockprice)
-        totalprice =  stockprice * int(sharequantity)
-        #check for amount of cash for user
-        cash = db.execute("select cash from users where id = ?", session["user_id"])
+            #handle exception for invalid stock symbol
+            if stockprice == None or "":
+                return apology("There is no such stock")
 
-        for row in cash:
-            print(row["cash"])
-            balance = row["cash"]
+            elif sharequantity.isnumeric() is False or int(sharequantity) <= 0:
+                return apology("You must enter a positive number")
+
+            elif(float((sharequantity)).is_integer() is False):
+                return apology("You must enter a whole number")
+        except:
+            return apology("an unexpected error occured, please try again", 400)
+
+        #handle purchase
+        try:
+            # check if the user has enough cash
+            totalprice =  stockprice * int(sharequantity)
+            cash = db.execute("select cash from users where id = ?", session["user_id"])
+            print("totalprice: ", totalprice, type(totalprice))
+            balance = cash[0]["cash"]
+            print("balance: ", balance, type(balance))
+
             if balance < totalprice:
                 return apology("You do not have enough cash")
 
-        #log the transaction record into the database
-        db.execute("insert into trade (user_id, Stock, Quantity, total_Bought) values (?,?,?,?);", session["user_id"], stocksymbol, sharequantity, totalprice)
-        #update the cash balance of the user
-        newbalance = balance - totalprice
-        db.execute("update users set cash = ? where id = ?;", newbalance, session["user_id"])
-        #update the stock profile of the user if the user do not own the stock
-        record = db.execute("select EXISTS(Select 1 from stockprofile where user_id = ? and Stock = ?)", session["user_id"], stocksymbol)
-        print(record[0].get("EXISTS(Select 1 from stockprofile where user_id = 1 and Stock = 'NFLX')"))
+            #log the transaction record into the database
+            db.execute("insert into trade (user_id, Stock, Quantity, total_Bought) values (?,?,?,?);", session["user_id"], stocksymbol, sharequantity, totalprice)
+            #update the cash balance of the user
+            newbalance = balance - totalprice
+            db.execute("update users set cash = ? where id = ?;", newbalance, session["user_id"])
 
-        if record[0].get("EXISTS(Select 1 from stockprofile where user_id = 1 and Stock = 'NFLX')") == 0:
-            print("not found")
-            db.execute("insert into stockprofile (user_id, Stock, Quantity, Price) values (?,?,?,?);", session["user_id"], stocksymbol, sharequantity, stockprice)
-            print(db.execute("select * from stockprofile;"))
-
-        else:
+            #update the stockprofile of the user
             #Get the total stock quantity & price to be updated
             Quantitylist = db.execute("select Quantity , Price from stockprofile where user_id = ? and Stock = ? ", session["user_id"], stocksymbol)
-            #print(Quantitylist)
-            for row in Quantitylist:
-                #print(row)
-                exQuantity = row["Quantity"]
-                exPrice = row["Price"]
 
-            totalquantity = float(exQuantity) + float(sharequantity)
-            newPrice = ((float(exPrice) * float(exQuantity)) + (float(stockprice) * float(sharequantity))) / totalquantity
+            #if the user already have this stock purchased, update it
+            if (len(Quantitylist) > 0):
+                for row in Quantitylist:
+                    exQuantity = row["Quantity"]
+                    exPrice = row["Price"]
+                totalquantity = float(exQuantity) + float(sharequantity)
+                newtotalprice = totalprice + exPrice
+                db.execute("update stockprofile set Quantity = ? , Price = ? where user_id = ? and Stock = ?",int(totalquantity), newtotalprice, session["user_id"], stocksymbol)
 
-            #Update the stock average price
-            db.execute("update stockprofile set Quantity = ? , Price = ? where user_id = ?",int(totalquantity), newPrice, session["user_id"])
+            #if he do not have the stock purchased before, add it
+            else:
+                #Update the stock average price
+                db.execute("insert into stockprofile (user_id, Stock, Quantity, Price) values (?,?,?,?) ",session["user_id"], stocksymbol,int(sharequantity), totalprice )
 
+        except:
+                return apology("an unexpected error occured, please try again", 400)
 
-    return redirect("/")
+        return redirect("/")
 
 
 @app.route("/history")
@@ -182,17 +213,18 @@ def quote():
         #display form to request a stock quote
         return render_template("quote.html")
     if request.method == "POST":
-        #lookup the stock symbol, disaply result
-        stockname = request.form.get("stockname")
+
+        #get userinput
+        stockname = request.form.get("symbol")
         stockquote = lookup(stockname)
-        print(stockquote)
 
-        #cater for improper stock symbol input
-        if stockquote is None:
-            return apology("Inbvalid stock name")
+        #handle exception
+        if stockquote == None or "":
+            return apology("Inbvalid stock name", 400)
 
-        return render_template("quoted.html", quotelist = stockquote)
-
+        else:
+            stockquote["price"] = usd(stockquote["price"])
+            return render_template("quoted.html", stockquote = stockquote)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -202,31 +234,38 @@ def register():
 
    # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-    #save username & password into a variable
-        username = request.form.get("username")
-        password = request.form.get("password")
-        cPassword = request.form.get("cPassword")
+        try:
+            #save username & password into a variable
+            username = request.form.get("username")
+            password = request.form.get("password")
+            confirmation = request.form.get("confirmation")
 
-    #check db to ensure theres no duplicate username
-        dbUsername = db.execute("SELECT * FROM users WHERE username = ?", username)
+            #check db to ensure theres no duplicate username
+            dbUsername = db.execute("SELECT username FROM users WHERE username = ?", username)
+            print(dbUsername)
+            print(username)
 
-        if dbUsername == username:
-            return apology("The username is already registered", 403)
-        elif username is None:
-            return apology("You must enter username ", 403)
-        elif password is None:
-            return apology("You must enter password ", 403)
-        elif cPassword is None:
-            return apology("You must confirm password ", 403)
-        elif password != cPassword:
-            return apology("The password must match", 403)
-
-    #use db.execute to query into database
-        else:
-            hash = generate_password_hash(password)
-            #print(hash)
-            db.execute("insert into users (username, hash) values (?,?);", username, hash)
+            if username == "":
+                return apology("You must enter username ", 400)
+            elif password == "":
+                return apology("You must enter password ", 400)
+            elif confirmation == "":
+                return apology("You must confirm password ", 400)
+            elif password != confirmation:
+                return apology("The password must match", 400)
+            elif dbUsername != []:
+                print("hello")
+                print(dbUsername[0]["username"])
+                if dbUsername[0]["username"] == username:
+                    return apology("The username is already registered", 400)
+            else:
+                hash = generate_password_hash(password)
+                #print(hash)
+                db.execute("insert into users (username, hash) values (?,?);", username, hash)
             return redirect("/")
+
+        except:
+             return apology("an unexpected error occured, please try again", 400)
 
 
 @app.route("/sell", methods=["GET", "POST"])
@@ -255,9 +294,12 @@ def sell():
         #Update the database
         #input a transaction record
         db.execute("insert into trade (user_id, Stock, Quantity, total_Sold) values (?,?,?,?);", session["user_id"], stocksymbol, sharequantity, totalprice)
+
         #update stockprofile
         newquantity = (db.execute("select Quantity from stockprofile where user_id = ?",session["user_id"])[0].get("Quantity")) - int(sharequantity)
+        print("newquantity: " , newquantity)
         db.execute("update stockprofile set Quantity = ?, Price = ? where user_id = ? and Stock = ?", newquantity, totalprice, session["user_id"], stocksymbol)
+
         #update the balance
         balance = db.execute("select cash from users where id = ?",  session["user_id"])[0].get("cash")
         newbalance = float(balance) + float(totalprice)

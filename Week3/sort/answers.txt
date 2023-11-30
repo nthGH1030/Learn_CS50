@@ -1,0 +1,83 @@
+sort1 uses: bubble sort
+--result from random5000.txt--
+real    0m0.069s
+user    0m0.033s
+sys     0m0.029s
+--result from random50000.txt--
+real    0m5.833s
+user    0m5.128s
+sys     0m0.350s
+--result from reverse5000.txt--
+real    0m0.109s
+user    0m0.039s
+sys     0m0.036s
+--result from reverse50000.txt--
+real    0m5.095s
+user    0m4.575s
+sys     0m0.307s
+--result from sorted5000.txt--
+real    0m0.031s
+user    0m0.000s
+sys     0m0.030s
+--result from sorted50000.txt--
+real    0m0.479s
+user    0m0.015s
+sys     0m0.283s
+
+How do you know?: It has a particular shorter sort time for sorted array, but a long time on all other arrays
+
+sort2 uses: merge sort
+--result from random5000.txt--
+real    0m0.047s
+user    0m0.000s
+sys     0m0.033s
+--result from random50000.txt--
+real    0m0.407s
+user    0m0.025s
+sys     0m0.278s
+--result from reverse5000.txt--
+real    0m0.029s
+user    0m0.004s
+sys     0m0.025s
+--result from reverse50000.txt--
+real    0m0.523s
+user    0m0.021s
+sys     0m0.293s
+--result from sorted5000.txt--
+real    0m0.030s
+user    0m0.000s
+sys     0m0.030s
+--result from sorted50000.txt--
+real    0m0.423s
+user    0m0.027s
+sys     0m0.272s
+
+How do you know?: its always the fastest on all array. Plus the longer the array gets, the margin of increase for time per array is diminishing, meaning its a log curve
+
+sort3 uses: selection sort
+--result from random5000.txt--
+real    0m0.055s
+user    0m0.016s
+sys     0m0.032s
+--result from random50000.txt--
+real    0m2.273s
+user    0m1.769s
+sys     0m0.343s
+--result from reverse5000.txt--
+real    0m0.083s
+user    0m0.025s
+sys     0m0.029s
+--result from reverse50000.txt--
+real    0m2.551s
+user    0m2.159s
+sys     0m0.267s
+--result from sorted5000.txt--
+real    0m0.048s
+user    0m0.020s
+sys     0m0.028s
+--result from sorted50000.txt--
+real    0m2.364s
+user    0m1.840s
+sys     0m0.298s
+
+How do you know?:it has a overall longest sorting time on all 3 txt as it always taske big O of n2 to sort using selection sort

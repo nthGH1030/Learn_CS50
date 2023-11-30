@@ -7,7 +7,11 @@
 {% block main %}
     <form action="/sell" method="post">
         <div class="mb-3">
-            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" id="symbol" name="symbol" placeholder="Stock Symbol(Ex. NFLX)" type="text">
+            <select name="symbol" id="symbol">
+                <option value="">--Please choose an option--</option>
+                <option value="NFLX">NFLX</option>
+                </select>
+
         </div>
         <div class="mb-3">
             <input autocomplete="off" autofocus class="form-control mx-auto w-auto" id="shares" name="shares" placeholder="Number of share(s) to sell" type="text">
